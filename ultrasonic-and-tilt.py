@@ -5,10 +5,7 @@ import time
 
 TRIG = 13
 ECHO = 12
-
-import RPi.GPIO as GPIO
-import time
-
+TiltPin = 40 #change this
 BuzzerPin = 16    # pin11
 BtnPin = 33 #GPIO 13?
 
@@ -37,6 +34,11 @@ def beep(x):
 def setup():
 	global first_pressed
 	first_pressed = False
+	
+	global isTilted
+	isTilted = False
+	
+	
 	GPIO.setmode(GPIO.BOARD)
 	GPIO.setup(TRIG, GPIO.OUT)
 	GPIO.setup(ECHO, GPIO.IN)
@@ -44,14 +46,19 @@ def setup():
 	GPIO.setup(BuzzerPin, GPIO.OUT)	# Set pins' mode is output
 	global Buzz						# Assign a global variable to replace GPIO.PWM 
 	Buzz = GPIO.PWM(BuzzerPin, 440)	# 440 is initial frequency.
+	
 	GPIO.setup(BtnPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	GPIO.add_event_detect(BtnPin, GPIO.BOTH, callback=detect, bouncetime=200)
-	# Buzz.start(50)
+	GPIO.setup(TiltPin, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+	
+	GPIO.add_event_detect(BtnPin, GPIO.BOTH, callback=detect_button, bouncetime=200)
+	GPIO.add_event_detect(TiltPin, GPIO.BOTH, callback=detect_tilt, bouncetime=200)
+
 	
 def button_output(x):
-	
 	global first_pressed
-	if x == 0:
+	global isTilted
+	
+	if x == 0 and not(isTilted):
 		if(not(first_pressed)):
 			first_pressed = True
 			calibrate()	
@@ -98,10 +105,20 @@ def button_output(x):
 		'''
 		
 		
-		
+def tilt_output(x):
+	print('tilt output =', x)
+	global isTilted
+	
+	if(x == 0):
+		isTilted = True
+	else:
+		isTilted = False
 
-def detect(chn):
+def detect_button(chn):
 	button_output(GPIO.input(BtnPin))
+	
+def detect_tilt(chn):
+	tilt_output(GPIO.input(TiltPin))
 
 def distance():
 	GPIO.output(TRIG, 0)
