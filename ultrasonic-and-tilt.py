@@ -109,18 +109,20 @@ def tilt_output(x):
 	print('tilt output =', x)
 	global isTilted
 	
-	if(x == 0):
+	if(x == 1):
 		isTilted = True
 	else:
 		isTilted = False
 
 def detect_button(chn):
+	print('detected button')
 	button_output(GPIO.input(BtnPin))
 	
 def detect_tilt(chn):
 	tilt_output(GPIO.input(TiltPin))
 
 def distance():
+	print('in distance()')
 	GPIO.output(TRIG, 0)
 	time.sleep(0.000002)
 
@@ -128,7 +130,6 @@ def distance():
 	time.sleep(0.00001)
 	GPIO.output(TRIG, 0)
 
-	
 	while GPIO.input(ECHO) == 0:
 		a = 0
 	time1 = time.time()
@@ -138,6 +139,7 @@ def distance():
 
 	during = time2 - time1
 	return during * 340 / 2 * 100
+	
 
 def loop():
 	while True:
