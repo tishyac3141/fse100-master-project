@@ -107,7 +107,7 @@ def setup():
 	
 
 	
-def button_output(x):
+def button_output(x):	
 	global first_pressed
 	# global isTilted
 	global current_x_rot
@@ -229,24 +229,21 @@ def loop():
 		
 		global current_x_rot
 		global current_y_rot
+		global hasAlerted
 
 		store_values(get_x_rotation(accel_xout_scaled, accel_yout_scaled, accel_zout_scaled), get_y_rotation(accel_xout_scaled, accel_yout_scaled, accel_zout_scaled))
 		
 		global height
-		
-		if(height != 0 and abs(current_x_rot) <= 20 and abs(current_y_rot) <= 20):
-			hasAlerted = True
+		if(height != 0):
 			dis = distance()
 			ratio = (height - dis) / height
 		
-			if(ratio >= 0.85):
-				for i in range(0, 9):
-					Buzz.start(50)
-					time.sleep(1)
-					Buzz.stop()
-					time.sleep(0.5)	
+			if(abs(current_x_rot) <= 20 and abs(current_y_rot) <= 20 and ratio >= 0.85):
+				hasAlerted = True
+				Buzz.start(50)
 				
-		time.sleep(0.5)
+		time.sleep(0.75)
+		Buzz.stop()
 		
 		# if(dis < 10 and dis > 2):
 			# Buzz.start(30)
