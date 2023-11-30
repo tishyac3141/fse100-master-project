@@ -96,26 +96,24 @@ def setup():
 	GPIO.setup(ECHO, GPIO.IN)
 	GPIO.setmode(GPIO.BOARD)		# Numbers GPIOs by physical location
 	GPIO.setup(BuzzerPin, GPIO.OUT)	# Set pins' mode is output
-	global Buzz						# Assign a global variable to replace GPIO.PWM 
+	global Buzz						
 	Buzz = GPIO.PWM(BuzzerPin, 440)	# 440 is initial frequency.
 	
 	GPIO.setup(BtnPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	# GPIO.setup(TiltPin, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
 	
 	GPIO.add_event_detect(BtnPin, GPIO.BOTH, callback=detect_button, bouncetime=200)
-	# GPIO.add_event_detect(TiltPin, GPIO.BOTH, callback=detect_tilt, bouncetime=200)
 	
-
 	
 def button_output(x):	
 	global first_pressed
-	# global isTilted
 	global current_x_rot
 	global current_y_rot
 	
 	print("x_rotation = ", current_x_rot)
 	print("y_rotation = ", current_y_rot)
-	
+
+	# only if the button is pressed and the gyroscope is 'straight' (within 15 degrees), then 
+	# do any beeping
 	if x == 0 and abs(current_x_rot) <= 15 and abs(current_y_rot) <= 15:
 		if(not(first_pressed)):
 			first_pressed = True
@@ -125,52 +123,25 @@ def button_output(x):
 			dis = distance()
 			ratio = (height - dis) / height
 			count = 0
-			if(ratio <= 0.23):
+			if(ratio <= 0.25):
 				count = 1
-				# Buzz.start(50)
 				print('count =', count)
-			elif(ratio <= 0.58):
+			elif(ratio <= 0.50):
 				count = 2
-				# Buzz.start(50)
 				print('count =', count)
 			elif(ratio <= 0.75):
 				count = 3
-				# Buzz.start(50)
 				print('count =', count)
 			else:
 				count = 4
-				# Buzz.start(50)
 				print('count =', count)
+			# beep according to calculated ratios above
 			for i in range(0, count):
 				Buzz.start(50)
 				time.sleep(1)
 				Buzz.stop()
 				time.sleep(0.5)
-
-	'''
-	global first_pressed
-	if x == 0:
-		if(not(first_pressed)):
-			first_pressed = True
-			calibrate()	
-		else:
-			dis = distance()
-			if(dis < 10 and dis > 2):
-				Buzz.start(50)
-			else:
-				Buzz.stop()
 		
-		'''
-		
-		
-def tilt_output(x):
-	print('tilt output =', x)
-	global isTilted
-	
-	if(x == 1):
-		isTilted = True
-	else:
-		isTilted = False
 
 def detect_button(chn):
 	print('detected button')
@@ -211,10 +182,6 @@ def loop():
 		gyro_yout = read_word_2c(0x45)
 		gyro_zout = read_word_2c(0x47)
 
-		# print ("gyro_xout : ", gyro_xout, " scaled: ", (gyro_xout / 131))
-		# print ("gyro_yout : ", gyro_yout, " scaled: ", (gyro_yout / 131))
-		# print ("gyro_zout : ", gyro_zout, " scaled: ", (gyro_zout / 131))
-
 		accel_xout = read_word_2c(0x3b)
 		accel_yout = read_word_2c(0x3d)
 		accel_zout = read_word_2c(0x3f)
@@ -222,10 +189,6 @@ def loop():
 		accel_xout_scaled = accel_xout / 16384.0
 		accel_yout_scaled = accel_yout / 16384.0
 		accel_zout_scaled = accel_zout / 16384.0
-
-		# print ("accel_xout: ", accel_xout, " scaled: ", accel_xout_scaled)
-		# print ("accel_yout: ", accel_yout, " scaled: ", accel_yout_scaled)
-		# print ("accel_zout: ", accel_zout, " scaled: ", accel_zout_scaled)
 		
 		global current_x_rot
 		global current_y_rot
@@ -234,21 +197,21 @@ def loop():
 		store_values(get_x_rotation(accel_xout_scaled, accel_yout_scaled, accel_zout_scaled), get_y_rotation(accel_xout_scaled, accel_yout_scaled, accel_zout_scaled))
 		
 		global height
+		# only if it's been calibrated once
 		if(height != 0):
 			dis = distance()
 			ratio = (height - dis) / height
-		
+
+			# if it's within a looser range of 20 degrees (aka it's straight)
+			# and it's 85% or more full, then start beeping
 			if(abs(current_x_rot) <= 20 and abs(current_y_rot) <= 20 and ratio >= 0.85):
 				hasAlerted = True
 				Buzz.start(50)
 				
+		# keep beeping for 3/4 of a second
 		time.sleep(0.75)
 		Buzz.stop()
 		
-		# if(dis < 10 and dis > 2):
-			# Buzz.start(30)
-		# else:
-			# Buzz.stop()
 
 def destroy():
 	Buzz.stop()					# Stop the buzzer
